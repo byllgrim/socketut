@@ -1,13 +1,23 @@
 #include <sys/socket.h>
 #include <netdb.h>
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
+#include <unistd.h>
 
 void die(char *msg) {
 	perror(msg);
 	exit(EXIT_FAILURE);
+}
+
+void handleconn(int fd) {
+	char buf[BUFSIZ+1];
+
+	bzero(buf, sizeof(buf));
+	read(fd, buf, BUFSIZ);
+	printf("%s", buf);
 }
 
 int main(int argc, char *argv[]) {
@@ -17,7 +27,7 @@ int main(int argc, char *argv[]) {
 	int err;
 	int sockfd, tmpfd;
 	int one = 1;
-	char buf[BUFSIZ+1];
+	pid_t pid;
 
 	/* take port as argument */
 	if (argc != 2) {
@@ -53,19 +63,30 @@ int main(int argc, char *argv[]) {
 		die("listen");
 
 	/* accept connections */
-	bzero(buf, sizeof(buf));
 	for (;;) {
 		if ((tmpfd = accept(sockfd, 0, 0)) < 0) {
 			perror("");
 			continue;
 		}
 
-		read(tmpfd, buf, BUFSIZ);
-		printf("%s\n", buf);
+		switch (pid = fork()) {
+		case -1:
+			die("fork");
+		case 0:
+			close(sockfd);
+			handleconn(tmpfd);
+			close(tmpfd);
+			exit(EXIT_SUCCESS);
+		default:
+			close(tmpfd);
+		}
 	}
 
 	/* cleanup */
 	freeaddrinfo(res);
+	close(sockfd);
+	/* TODO something forgotten? */
+	/* TODO this is never reached */
 
 	return 0;
 }
