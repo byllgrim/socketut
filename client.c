@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
 	bzero(buf, sizeof(buf));
 	if (read(sockfd, buf, BUFSIZ) < 0)
 		die("read");
-	printf("%s\n", buf);
+	printf("%s", buf);
 
 	return 0;
 }

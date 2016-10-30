@@ -14,10 +14,13 @@ void die(char *msg) {
 
 void handleconn(int fd) {
 	char buf[BUFSIZ+1];
+	char msg[] = "ho\n";
 
 	bzero(buf, sizeof(buf));
 	read(fd, buf, BUFSIZ);
 	printf("%s", buf);
+
+	send(fd, msg, sizeof(msg), 0);
 }
 
 int main(int argc, char *argv[]) {
