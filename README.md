@@ -1,6 +1,9 @@
 #socketut
 A tutorial to quickly learn sockets.
 
+WARNING! It is not complete.
+I am writing this as I learn.
+
 #usage
 1. Build with `$ make`
 2. Start the server
