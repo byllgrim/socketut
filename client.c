@@ -1,24 +1,27 @@
 #include <sys/socket.h>
 #include <netdb.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
 
-int main() {
-	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+int main(int argc, char *argv[]) {
+	int sockfd;
+	struct addrinfo *res;
+	char buf[256];
+
+	if (getaddrinfo(NULL, argv[1], 0, &res))
+		perror("getaddrinfo: error");
+
+	sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 	if (sockfd < 0) perror("failed to open socket");
 
-	struct addrinfo *res = malloc(sizeof(res));
-	if (getaddrinfo("127.0.0.1", "12321", 0, &res))
-		perror("failed to get address");
-
 	if (connect(sockfd, res->ai_addr, res->ai_addrlen))
-		perror("failed to connect");
+		perror("connect: error");
 	freeaddrinfo(res);
 
 	if (send(sockfd, "hey\n", 4, 0) == -1) perror("failed to send");
 
-	char buf[256];
 	bzero(buf, 256);
 	int n = read(sockfd, buf, 255);
 	if (n < 0) perror("failed to read from socket");
