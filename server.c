@@ -14,22 +14,26 @@ int main(int argc, char *argv[]) {
 	/* variables */
 	struct addrinfo hints;
 	struct addrinfo *res;
+	int err;
 	int sockfd, tmpfd;
 	int one = 1;
 	char buf[BUFSIZ+1];
 
 	/* take port as argument */
-	errno = EINVAL;
-	if (argc != 2)
-		die("usage: client port");
+	if (argc != 2) {
+		fprintf(stderr, "usage: %s port\n", argv[0]);
+		exit(EXIT_FAILURE);
+	}
 
 	/* construct address */
 	hints.ai_family = AF_UNSPEC;     /* ipv4 or ipv6 */
 	hints.ai_socktype = SOCK_STREAM; /* tcp */
 	hints.ai_protocol = 0;           /* any protocol */
 	hints.ai_flags = AI_PASSIVE;     /* any address */
-	if (getaddrinfo(NULL, argv[1], &hints, &res))
-		die("getaddrinfo"); /* TODO doesnt set errno */
+	if ((err = getaddrinfo(NULL, argv[1], &hints, &res))) {
+		fprintf(stderr, "getaddrinfo: %s\n", strerror(err));
+		exit(EXIT_FAILURE);
+	}
 
 	/* create socket */
 	sockfd = socket(res->ai_family,res->ai_socktype,res->ai_protocol);
@@ -51,8 +55,10 @@ int main(int argc, char *argv[]) {
 	/* accept connections */
 	bzero(buf, sizeof(buf));
 	for (;;) {
-		tmpfd = accept(sockfd, 0, 0);
-		/* TODO handle error */
+		if ((tmpfd = accept(sockfd, 0, 0)) < 0) {
+			perror("");
+			continue;
+		}
 
 		read(tmpfd, buf, BUFSIZ);
 		printf("%s\n", buf);
